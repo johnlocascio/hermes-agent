@@ -1397,3 +1397,10 @@ not the specific names.
 
 Reviewers should reject new change-detector tests; authors should convert
 them into invariants before re-requesting review.
+
+## Secrets and agent logins
+
+- **API keys the agent uses at runtime live in Doppler**, never in a committed config file. The X API keys are in project `x-api`. A new key goes in its own project only if one is free (the free Doppler plan caps at 10 projects and 10 configs per environment, and both are full), so ask John first.
+- **Shared credentials live once** in Doppler project `shared`: `CLOUDFLARE_ACCOUNT_ID`, `GITLEAKS_LICENSE`, `MERCURY_TOKEN` (read-only), `BACKUP_AGE_RECIPIENT`. Reference them from an app config as `${shared.prd.NAME}`; never copy the value. `CLOUDFLARE_ADMIN_API_TOKEN` also lives there for hand-run account jobs; no config references it. App API keys (Anthropic, Resend, Twilio, Supabase, Cloudflare API tokens, and `LHCI_GITHUB_APP_TOKEN`, which Lighthouse CI issues per repository) stay per app so spend is visible and one app can be revoked alone.
+- **Never print a secret value.** List with `doppler secrets --project <p> --config <c> --only-names`. Do not run plain `doppler secrets`, `doppler secrets download` to the terminal, or `doppler configure --json`; all three show values or tokens.
+- **Agent logins for testing come from 1Password**, vault `Claude testing` (John creates it and adds the test accounts), through the 1Password browser integration (the agent asks, John approves, 1Password fills the form). Test accounts only, never a real admin login. The agent never reads, copies, logs, or stores the password.
